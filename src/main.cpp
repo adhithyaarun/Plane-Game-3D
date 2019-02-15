@@ -3,6 +3,7 @@
 #include "airplane.h"
 #include "dashboard.h"
 #include "shape.h"
+#include "checkpoint.h"
 
 using namespace std;
 
@@ -15,9 +16,15 @@ GLFWwindow *window;
 **************************/
 
 Jet jet;
+
 Dashboard dashboard;
 Circle sea;
+Circle shimmer[100];
+
 view_t view_options[5];
+coord_t plane_pos;
+
+Checkpoint checkpoints[8];
 
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
@@ -33,6 +40,10 @@ void draw() {
     // use the loaded shader program
     // Don't change unless you know what you are doing
     glUseProgram (programID);
+
+    plane_pos.x = jet.position.x;
+    plane_pos.y = jet.position.y;
+    plane_pos.z = jet.position.z;
 
     switch(current_view)
     {
@@ -81,8 +92,29 @@ void draw() {
             view_options[3].up.z = 0.0;
             break;
         case 4:
+            view_options[4].up.x = 0.0;
+            view_options[4].up.y = 1.0;
+            view_options[4].up.z = 0.0;
+            
+            view_options[4].target.x = jet.position.x;
+            view_options[4].target.y = jet.position.y;
+            view_options[4].target.z = jet.position.z;
+
+            track_cursor(window, 600, 600);
             break;
     }
+
+    coord_t vec;
+    vec.x = view_options[current_view].target.x - view_options[current_view].eye.x;
+    vec.y = view_options[current_view].target.y - view_options[current_view].eye.y;
+    vec.z = view_options[current_view].target.z - view_options[current_view].eye.z;
+    float mag = (float)sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
+    dashboard.position.x = 2.0 * vec.x / mag;
+    dashboard.position.y = 2.0 * vec.y / mag;
+    dashboard.position.z = 2.0 * vec.z / mag;
+    dashboard.altitude = jet.position.y;
+    dashboard.speed = jet.speed;
+    dashboard.tick(); 
 
     // Eye - Location of camera. Don't change unless you are sure!!
     glm::vec3 eye(view_options[current_view].eye.x, view_options[current_view].eye.y, view_options[current_view].eye.z);
@@ -107,20 +139,28 @@ void draw() {
 
     // Scene render
     // jet.draw(VP);
-    sea.draw(VP);
-    jet.draw(VP);
     dashboard.draw(VP);
+    sea.draw(VP);
+    for(int i=0; i<100; ++i)
+    {
+        shimmer[i].draw(VP);
+    }
+    // for(int i=0; i<8 ; ++i)
+    // {
+    //     checkpoints[i].draw(VP);
+    // }
+    jet.draw(VP);
 }
 
 void tick_input(GLFWwindow *window) {
-    int yaw_left  = glfwGetKey(window, GLFW_KEY_A);
-    int yaw_right = glfwGetKey(window, GLFW_KEY_D);
+    int yaw_left  = glfwGetKey(window, GLFW_KEY_Q);
+    int yaw_right = glfwGetKey(window, GLFW_KEY_E);
     
     int pitch_up = glfwGetKey(window, GLFW_KEY_UP);
     int pitch_down = glfwGetKey(window, GLFW_KEY_DOWN);
 
-    int roll_right = glfwGetKey(window, GLFW_KEY_E);
-    int roll_left = glfwGetKey(window, GLFW_KEY_Q);
+    int roll_left = glfwGetKey(window, GLFW_KEY_A);
+    int roll_right = glfwGetKey(window, GLFW_KEY_D);
 
     int accelerate = glfwGetKey(window, GLFW_KEY_W);
     int decelerate = glfwGetKey(window, GLFW_KEY_S);
@@ -193,9 +233,9 @@ void tick_input(GLFWwindow *window) {
     }
 }
 
-void tick_elements() {
+void tick_elements() 
+{
     jet.tick();
-    dashboard.tick();
 }
 
 /* Initialize the OpenGL rendering properties */
@@ -205,8 +245,23 @@ void initGL(GLFWwindow *window, int width, int height) {
     // Create the models
 
     jet = Jet(0.0, 0.0, 0.0, COLOR_RED);
-    dashboard = Dashboard(-1.3, -3.7, 15.0);
+    dashboard = Dashboard(0.0, 14.0, -18.0);
     sea = Circle(0.0, -350.0, 0.0, 7000.0, 90.0, 0.0, 0.0, COLOR_BLUE);
+
+    // for(int i=0; i<8 ; ++i)
+    // {
+    //     checkpoints[i] = Checkpoint(5.0, 5.0, 5.0, 8.0, 1.0, 0.0, 0.0, 0.0, COLOR_ORANGE);
+    // }
+
+    float x_pos;
+    float y_pos;
+    srand(time(0));
+    for(int i=0; i<100; ++i)
+    {
+        x_pos = jet.position.x + ((rand() % 200) - 100);
+        y_pos = jet.position.y + ((rand() % 200) - 100);
+        shimmer[i] = Circle(x_pos, -350.0, y_pos, 1.0, 90.0, 0.0, 0.0, COLOR_LIGHT_GREEN);
+    }
 
     view_options[0].eye.x = 0.0;
     view_options[0].eye.y = 16.0;

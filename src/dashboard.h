@@ -6,9 +6,11 @@ class Fuel
 {
     public:
         Fuel() {}
-        Fuel(float x, float y, float z);
+        Fuel(float x, float y, float z, float size, float angle_x, float angle_y, float angle_z, color_t color);
         glm::vec3 position;
-        float rotation;
+        float rotation_x;
+        float rotation_y;
+        float rotation_z;
         void draw(glm::mat4 VP);
         void refill();
         int units;

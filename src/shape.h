@@ -35,12 +35,31 @@ class Rectangle
     float rotation_y;
     bounding_box_t boundary;
     void draw(glm::mat4 VP);
-    void set_position(float x, float y);
+    void set_position(float x, float y, float z);
     void tick();
     float length;
     float breadth;
   private:
     VAO *object;
+};
+
+class Cuboid
+{
+  public:
+    Cuboid() {}
+    Cuboid (float x, float y, float z, float length, float width, float height, float angle_x, float angle_y, float angle_z, color_t color);
+    glm::vec3 position;
+    float length;
+    float width;
+    float height;
+    float rotation_x;
+    float rotation_y;
+    float rotation_z;
+    void draw(glm::mat4 VP);
+    void set_position(float x, float y, float z);
+    void tick();
+  private:
+    VAO* object;
 };
 
 #endif

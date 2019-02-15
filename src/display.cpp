@@ -6,9 +6,9 @@
 //  5    |_4_|    6
 //         7
 
-Digit::Digit(float x, float y, int digit)
+Digit::Digit(float x, float y, float z, int digit)
 {
-    this->position = glm::vec3(x, y, 0);
+    this->position = glm::vec3(x, y, z);
     this->digit = digit;
 
     this->segment1 = Rectangle(x - 3.0, y + 0.4, this->position.z, 0.2, 0.02, 0, COLOR_BLACK);
@@ -104,43 +104,43 @@ void Digit::draw(glm::mat4 VP)
     }
 }
 
-void Digit::set_position(float x, float y)
+void Digit::set_position(float x, float y, float z)
 {
     this->position = glm::vec3(x, y, 0);
-    this->segment1.set_position(x - 3.0, y + 0.4);
-    this->segment2.set_position(x - 3.1, y + 0.3);
-    this->segment3.set_position(x - 2.9, y + 0.3);
-    this->segment4.set_position(x - 3.0, y + 0.2);
-    this->segment5.set_position(x - 3.1, y + 0.1);
-    this->segment6.set_position(x - 2.9, y + 0.1);
-    this->segment7.set_position(x - 3.0, y);
+    this->segment1.set_position(x - 3.0, y + 0.4, z);
+    this->segment2.set_position(x - 3.1, y + 0.3, z);
+    this->segment3.set_position(x - 2.9, y + 0.3, z);
+    this->segment4.set_position(x - 3.0, y + 0.2, z);
+    this->segment5.set_position(x - 3.1, y + 0.1, z);
+    this->segment6.set_position(x - 2.9, y + 0.1, z);
+    this->segment7.set_position(x - 3.0, y, z);
 }
 
 void Digit::tick(float x, int digit)
 {
-    this->set_position(x, this->position.y);
+    this->set_position(x, this->position.y, this->position.z);
     this->digit = digit;
 }
 
 // Display
-Display::Display(float x, float y, int value)
+Display::Display(float x, float y, float z, int value)
 {
-    this->position = glm::vec3(x, y, 0);
+    this->position = glm::vec3(x, y, z);
     this->value = value;
 
-    this->d10_0 = Digit(x + 1.8, y, value % 10);
+    this->d10_0 = Digit(x + 1.8, y, z, value % 10);
     value /= 10;
-    this->d10_1 = Digit(x + 1.5, y, value % 10);
+    this->d10_1 = Digit(x + 1.5, y, z, value % 10);
     value /= 10;
-    this->d10_2 = Digit(x + 1.2, y, value % 10);
+    this->d10_2 = Digit(x + 1.2, y, z, value % 10);
     value /= 10;
-    this->d10_3 = Digit(x + 0.9, y, value % 10);
+    this->d10_3 = Digit(x + 0.9, y, z, value % 10);
     value /= 10;
-    this->d10_4 = Digit(x + 0.6, y, value % 10);
+    this->d10_4 = Digit(x + 0.6, y, z, value % 10);
     value /= 10;
-    this->d10_5 = Digit(x + 0.3, y, value % 10);
+    this->d10_5 = Digit(x + 0.3, y, z, value % 10);
     value /= 10;
-    this->d10_6 = Digit(x, y, value % 10);
+    this->d10_6 = Digit(x, y, z, value % 10);
 }
 
 void Display::draw(glm::mat4 VP)
@@ -172,16 +172,16 @@ void Display::draw(glm::mat4 VP)
     }
 }
 
-void Display::set_position(float x, float y)
+void Display::set_position(float x, float y, float z)
 {
-    this->position = glm::vec3(x, y, 0);
-    this->d10_6.set_position(x, y);
-    this->d10_5.set_position(x + 0.3, y);
-    this->d10_4.set_position(x + 0.6, y);
-    this->d10_3.set_position(x + 0.9, y);
-    this->d10_2.set_position(x + 1.2, y);
-    this->d10_1.set_position(x + 1.5, y);
-    this->d10_0.set_position(x + 1.8, y);
+    this->position = glm::vec3(x, y, z);
+    this->d10_6.set_position(x, y, z);
+    this->d10_5.set_position(x + 0.3, y, z);
+    this->d10_4.set_position(x + 0.6, y, z);
+    this->d10_3.set_position(x + 0.9, y, z);
+    this->d10_2.set_position(x + 1.2, y, z);
+    this->d10_1.set_position(x + 1.5, y, z);
+    this->d10_0.set_position(x + 1.8, y, z);
 }
 
 void Display::tick(float value)

@@ -57,7 +57,7 @@ Circle::Circle(float x, float y, float r, color_t color)
 
 Circle::Circle(float x, float y, float z, float r, float angle_x, float angle_y, float angle_z, color_t color)
 {
-    this->position = glm::vec3(x, y, 0);
+    this->position = glm::vec3(x, y, z);
     this->rotation = angle_z;
     this->rotation_x = angle_x;
     this->rotation_y = angle_y;
@@ -217,9 +217,9 @@ void Rectangle::draw(glm::mat4 VP)
     draw3DObject(this->object);
 }
 
-void Rectangle::set_position(float x, float y)
+void Rectangle::set_position(float x, float y, float z)
 {
-    this->position = glm::vec3(x, y, this->position.z);
+    this->position = glm::vec3(x, y, z);
     this->boundary.x = this->position.x;
     this->boundary.y = this->position.y;
 }
@@ -229,3 +229,57 @@ void Rectangle::tick()
     ;
 }
 
+/************************************** 
+                CUBOID
+**************************************/
+
+// Cuboid::Cuboid(float x, float y, float z, float length, float width, float height, float angle_x, float angle_y, float angle_z, color_t color)
+// {
+//     this->position = glm::vec3(x, y, z);
+    
+//     this->rotation_x = angle_x;
+//     this->rotation_y = angle_y;
+//     this->rotation_z = angle_z;
+
+//     this->length = length;
+//     this->width = width;
+//     this->height = height;
+
+
+//     GLfloat vertex_buffer_data[] = {
+//         -length/2.0, width/2.0, -height/2.0,
+//         -length/2.0, -width/2.0, -height/2.0,
+//         length/2.0, -width/2.0, -height/2.0,
+        
+//         -length/2.0, width/2.0, -height/2.0,
+//         length/2.0, width/2.0, -height/2.0,
+//         length/2.0, -width/2.0, -height/2.0,
+//     };
+
+//     this->object = create3DObject(GL_TRIANGLES, 12 * 3, vertex_buffer_data, color, GL_FILL);
+// }
+
+// void Cuboid::draw(glm::mat4 VP)
+// {
+//     Matrices.model = glm::mat4(1.0f);
+//     glm::mat4 translate = glm::translate(this->position); // glTranslatef
+//     glm::mat4 rotate_x = glm::rotate((float)(this->rotation_x * M_PI / 180.0f), glm::vec3(1, 0, 0));
+//     glm::mat4 rotate_y = glm::rotate((float)(this->rotation_y * M_PI / 180.0f), glm::vec3(0, 1, 0));
+//     glm::mat4 rotate_z = glm::rotate((float)(this->rotation_z * M_PI / 180.0f), glm::vec3(0, 0, 1));
+//     /* No need as coordinates centered at (0, 0, 0) of the cube around which we want to rotate. */
+//     // rotate = rotate * glm::translate(glm::vec3(0, -0.6, 0));
+//     Matrices.model *= (translate * rotate_z * rotate_x * rotate_y);
+//     glm::mat4 MVP = VP * Matrices.model;
+//     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+//     draw3DObject(this->object);
+// }
+
+// void Cuboid::set_position(float x, float y, float z)
+// {
+//     this->position = glm::vec3(x, y, z);
+// }
+
+// void Cuboid::tick()
+// {
+//     ;
+// }

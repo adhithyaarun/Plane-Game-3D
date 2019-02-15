@@ -8,10 +8,10 @@ class Digit
 {
   public:
     Digit() {}
-    Digit(float x, float y, int digit);
+    Digit(float x, float y, float z, int digit);
     glm::vec3 position;
     void draw(glm::mat4 VP);
-    void set_position(float x, float y);
+    void set_position(float x, float y, float z);
     void tick(float x, int digit);
     int digit;
     Rectangle segment1;
@@ -27,10 +27,10 @@ class Display
 {
   public:
     Display() {}
-    Display(float x, float y, int score);
+    Display(float x, float y, float z, int score);
     glm::vec3 position;
     void draw(glm::mat4 VP);
-    void set_position(float x, float y);
+    void set_position(float x, float y, float z);
     void tick(float value);
     int value;
     Digit d10_0;

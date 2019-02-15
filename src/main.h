@@ -32,6 +32,7 @@ struct view_t {
     coord_t up;
 };
 
+extern coord_t plane_pos;
 extern view_t view_options[5];
 extern int current_view;
 // 0 => Tower View
@@ -53,6 +54,8 @@ void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods);
 void keyboardChar(GLFWwindow *window, unsigned int key);
 void mouseButton(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
+void track_cursor(GLFWwindow *window, int width, int height);
 
 // other_handlers.cpp
 void error_callback(int error, const char *description);
