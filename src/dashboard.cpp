@@ -75,6 +75,11 @@ void Fuel::set_position(float x, float y, float z)
     this->position = glm::vec3(x, y, z);
 }
 
+void Fuel::refill()
+{
+    this->units = 4;
+}
+
 void Fuel::tick()
 {
     ++this->counter;

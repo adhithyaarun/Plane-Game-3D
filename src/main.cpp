@@ -5,6 +5,8 @@
 #include "shape.h"
 #include "checkpoint.h"
 #include "arrow.h"
+#include "fuelup.h"
+#include "volcano.h"
 
 using namespace std;
 
@@ -25,7 +27,9 @@ int arrow_pos = 0;
 view_t view_options[5];
 coord_t plane_pos;
 
+FuelUp fuelups[5];
 Checkpoint checkpoints[8];
+Volcano volcanoes[6];
 
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
@@ -146,6 +150,19 @@ void draw() {
         jet.bombs[i].draw(VP);
     }
 
+    for(int i=0; i<5; ++i)
+    {
+        if(!fuelups[i].collected)
+        {
+            fuelups[i].draw(VP);
+        }
+    }
+
+    for(int i=0; i<6; ++i)
+    {
+        volcanoes[i].draw(VP);
+    }
+
     jet.draw(VP);
 }
 
@@ -251,6 +268,25 @@ void tick_elements()
             }
         }
     }
+
+    for(int i=0; i<5; ++i)
+    {
+        distance = sqrt(pow(jet.position.x - fuelups[i].position.x, 2) + pow(jet.position.y - fuelups[i].position.y, 2) + pow(jet.position.z - fuelups[i].position.z, 2));
+        if(abs(distance) < 4.0)
+        {
+            fuelups[i].collected = true;
+            dashboard.fuel.refill();
+        }
+    }
+
+    for(int i=0; i<6; ++i)
+    {
+        if((abs(jet.position.x - volcanoes[i].position.x) < (volcanoes[i].r_large + 1.5)) && 
+           (abs(jet.position.z - volcanoes[i].position.z) < (volcanoes[i].r_large + 1.5)))
+        {
+            quit(window);
+        }
+    }
 }
 
 /* Initialize the OpenGL rendering properties */
@@ -263,7 +299,27 @@ void initGL(GLFWwindow *window, int width, int height) {
     dashboard = Dashboard(2.0, 14.0, -18.0);
     sea = Circle(0.0, -350.0, 0.0, 7000.0, 90.0, 0.0, 0.0, COLOR_BLUE);
 
+    int x_rand = 0.0;
+    int y_rand = 0.0;
+    int z_rand = 0.0;
+
     srand(time(0));
+    for(int i=0; i<6; ++i)
+    {
+        if(i == 0)
+        {
+            x_rand = (rand() % 350);
+            z_rand = (rand() % 350);
+        }
+        else
+        {
+            x_rand = ((rand() % 550) + volcanoes[i-1].position.x + 205.0) * (rand() % 2 == 0 ? 1 : -1);
+            z_rand = ((rand() % 550) + volcanoes[i-1].position.z + 205.0) * (rand() % 2 == 0 ? 1 : -1);
+        }
+        
+        volcanoes[i] = Volcano(x_rand, -350.0, z_rand, 28.0, 12.0, 32.0, 90.0, 0.0, 0.0, COLOR_BROWN);
+    }
+
     for(int i=0; i<8 ; ++i)
     {
         if(i == 0)
@@ -282,6 +338,24 @@ void initGL(GLFWwindow *window, int width, int height) {
                                         0.0,                                               // Angle along Z
                                         COLOR_ORANGE);                                     // Colour
         }
+    }
+    
+    for(int i=0; i<5; ++i)
+    {
+        if(i == 0)
+        {
+            x_rand = ((rand() % 200) + jet.position.x) * (rand() % 2 == 0 ? 1 : -1);
+            y_rand = ((rand() % 200) + jet.position.y) * (rand() % 2 == 0 ? 1 : -1);
+            z_rand = fmod(((rand() % 50) + jet.position.z) * (rand() % 2 == 0 ? 1 : -1), 348.0);
+        }
+        else
+        {
+            x_rand = ((rand() % 200) + x_rand) * (rand() % 2 == 0 ? 1 : -1);
+            y_rand = ((rand() % 200) + y_rand) * (rand() % 2 == 0 ? 1 : -1);
+            z_rand = fmod(((rand() % 50) + z_rand) * (rand() % 2 == 0 ? 1 : -1), 348.0);
+        }
+
+        fuelups[i] = FuelUp(x_rand, y_rand, z_rand, jet.rotation_x, jet.rotation_y, jet.rotation_z, COLOR_GREEN);
     }
 
     arrow = Arrow(checkpoints[0].position.x, 
