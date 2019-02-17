@@ -4,6 +4,7 @@
 #include "dashboard.h"
 #include "shape.h"
 #include "checkpoint.h"
+#include "arrow.h"
 
 using namespace std;
 
@@ -16,10 +17,10 @@ GLFWwindow *window;
 **************************/
 
 Jet jet;
-
 Dashboard dashboard;
 Circle sea;
-Circle shimmer[100];
+Arrow arrow;
+int arrow_pos = 0;
 
 view_t view_options[5];
 coord_t plane_pos;
@@ -104,18 +105,6 @@ void draw() {
             break;
     }
 
-    coord_t vec;
-    vec.x = view_options[current_view].target.x - view_options[current_view].eye.x;
-    vec.y = view_options[current_view].target.y - view_options[current_view].eye.y;
-    vec.z = view_options[current_view].target.z - view_options[current_view].eye.z;
-    float mag = (float)sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
-    dashboard.position.x = 2.0 * vec.x / mag;
-    dashboard.position.y = 2.0 * vec.y / mag;
-    dashboard.position.z = 2.0 * vec.z / mag;
-    dashboard.altitude = jet.position.y;
-    dashboard.speed = jet.speed;
-    dashboard.tick(); 
-
     // Eye - Location of camera. Don't change unless you are sure!!
     glm::vec3 eye(view_options[current_view].eye.x, view_options[current_view].eye.y, view_options[current_view].eye.z);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
@@ -138,17 +127,25 @@ void draw() {
     glm::mat4 MVP;  // MVP = Projection * View * Model
 
     // Scene render
-    // jet.draw(VP);
     dashboard.draw(VP);
     sea.draw(VP);
-    for(int i=0; i<100; ++i)
+    arrow.draw(VP);
+
+    for(int i=0; i<8 ; ++i)
     {
-        shimmer[i].draw(VP);
+        checkpoints[i].draw(VP);
     }
-    // for(int i=0; i<8 ; ++i)
-    // {
-    //     checkpoints[i].draw(VP);
-    // }
+
+    for(int i=0; i<jet.missiles.size(); ++i)
+    {
+        jet.missiles[i].draw(VP);
+    }
+    
+    for(int i=0; i<jet.bombs.size(); ++i)
+    {
+        jet.bombs[i].draw(VP);
+    }
+
     jet.draw(VP);
 }
 
@@ -236,6 +233,24 @@ void tick_input(GLFWwindow *window) {
 void tick_elements() 
 {
     jet.tick();
+    arrow.set_angle(90.0, jet.rotation_y, jet.rotation_z);
+    // Collision detection
+    double distance = 0.0;
+    for(int i=0; i<8; ++i)
+    {
+        if(arrow_pos == i)
+        {
+            distance = sqrt(pow(jet.position.x - checkpoints[i].position.x, 2) + pow(jet.position.y - checkpoints[i].position.y, 2) + pow(jet.position.z - checkpoints[i].position.z, 2));
+            if(abs(distance) < 4.0)
+            {
+                checkpoints[i].complete(COLOR_GREEN);
+                arrow_pos++;
+                arrow.set_position(checkpoints[arrow_pos].position.x,
+                                checkpoints[arrow_pos].position.y + checkpoints[arrow_pos].r_outer + 12.0,
+                                checkpoints[arrow_pos].position.z);
+            }
+        }
+    }
 }
 
 /* Initialize the OpenGL rendering properties */
@@ -245,23 +260,37 @@ void initGL(GLFWwindow *window, int width, int height) {
     // Create the models
 
     jet = Jet(0.0, 0.0, 0.0, COLOR_RED);
-    dashboard = Dashboard(0.0, 14.0, -18.0);
+    dashboard = Dashboard(2.0, 14.0, -18.0);
     sea = Circle(0.0, -350.0, 0.0, 7000.0, 90.0, 0.0, 0.0, COLOR_BLUE);
 
-    // for(int i=0; i<8 ; ++i)
-    // {
-    //     checkpoints[i] = Checkpoint(5.0, 5.0, 5.0, 8.0, 1.0, 0.0, 0.0, 0.0, COLOR_ORANGE);
-    // }
-
-    float x_pos;
-    float y_pos;
     srand(time(0));
-    for(int i=0; i<100; ++i)
+    for(int i=0; i<8 ; ++i)
     {
-        x_pos = jet.position.x + ((rand() % 200) - 100);
-        y_pos = jet.position.y + ((rand() % 200) - 100);
-        shimmer[i] = Circle(x_pos, -350.0, y_pos, 1.0, 90.0, 0.0, 0.0, COLOR_LIGHT_GREEN);
+        if(i == 0)
+        {
+            checkpoints[i] = Checkpoint(fmod(rand(), 100.0), fmod(rand(), 100.0), fmod(rand(), 100.0), 8.0, 1.0, 0.0, fmod(rand(), 360.0), 0.0, COLOR_ORANGE);
+        }
+        else
+        {
+            checkpoints[i] = Checkpoint(checkpoints[i-1].position.x + (rand() % 2 == 0 ? 1 : -1) * (100.0 + fmod(rand(), 200.0)), // X-coordinate
+                                        fmod(checkpoints[i-1].position.y + (rand() % 2 == 0 ? 1 : -1) * (fmod(rand(), 100.0)), 348.0), // Y-coordinate
+                                        checkpoints[i-1].position.z + (rand() % 2 == 0 ? 1 : -1) * (100.0 + fmod(rand(), 200.0)), // Z-coordinate
+                                        8.0,                                               // Inner radius
+                                        1.0,                                               // Width
+                                        0.0,                                               // Angle along X 
+                                        fmod(rand(), 360.0),                               // Angle along Y
+                                        0.0,                                               // Angle along Z
+                                        COLOR_ORANGE);                                     // Colour
+        }
     }
+
+    arrow = Arrow(checkpoints[0].position.x, 
+                  checkpoints[0].position.y + checkpoints[0].r_outer + 12.0,
+                  checkpoints[0].position.z,
+                  90.0,
+                  jet.rotation_y,
+                  jet.rotation_z,
+                  COLOR_RED);
 
     view_options[0].eye.x = 0.0;
     view_options[0].eye.y = 16.0;
@@ -331,6 +360,16 @@ int main(int argc, char **argv) {
 bool detect_collision(bounding_box_t a, bounding_box_t b) {
     return (abs(a.x - b.x) * 2 < (a.width + b.width)) &&
            (abs(a.y - b.y) * 2 < (a.height + b.height));
+}
+
+void fire_missile()
+{
+    jet.fire_missile();
+}
+
+void drop_bomb()
+{
+    jet.drop_bomb();
 }
 
 void reset_screen() {

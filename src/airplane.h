@@ -1,4 +1,5 @@
 #include "main.h"
+#include "missile.h"
 
 #ifndef AIRPLANE_H
 #define AIRPLANE_H
@@ -16,12 +17,15 @@ class Jet
     void set_position(float x, float y, float z);
     void accelerate();
     void decelerate();
+    void fire_missile();
+    void drop_bomb();
     void stabilize_x();
     void stabilize_y();
     void stabilize_z();
     void tick();
     double speed;
-
+    std::vector<Missile> missiles;
+    std::vector<Bomb> bombs;
   private:
     VAO *object;
 };

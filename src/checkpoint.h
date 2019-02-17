@@ -14,6 +14,7 @@ class Checkpoint
     float rotation_z;
     float r_inner;
     float r_outer;
+    void complete(color_t color);
     void draw(glm::mat4 VP);
     void set_position(float x, float y, float z);
     void tick();

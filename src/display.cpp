@@ -11,13 +11,13 @@ Digit::Digit(float x, float y, float z, int digit)
     this->position = glm::vec3(x, y, z);
     this->digit = digit;
 
-    this->segment1 = Rectangle(x - 3.0, y + 0.4, this->position.z, 0.2, 0.02, 0, COLOR_BLACK);
-    this->segment2 = Rectangle(x - 3.1, y + 0.3, this->position.z, 0.2, 0.02, -90, COLOR_BLACK);
-    this->segment3 = Rectangle(x - 2.9, y + 0.3, this->position.z, 0.2, 0.02, -90, COLOR_BLACK);
-    this->segment4 = Rectangle(x - 3.0, y + 0.2, this->position.z, 0.2, 0.02, 0, COLOR_BLACK);
-    this->segment5 = Rectangle(x - 3.1, y + 0.1, this->position.z, 0.2, 0.02, -90, COLOR_BLACK);
-    this->segment6 = Rectangle(x - 2.9, y + 0.1, this->position.z, 0.2, 0.02, -90, COLOR_BLACK);
-    this->segment7 = Rectangle(x - 3.0, y, this->position.z, 0.2, 0.02, 0, COLOR_BLACK);
+    this->segment1 = Rectangle(x - 3.0, y + 0.4, this->position.z, 0.2, 0.02, 0.0, 0.0, 0.0, COLOR_BLACK);
+    this->segment2 = Rectangle(x - 3.1, y + 0.3, this->position.z, 0.2, 0.02, 0.0, 0.0, -90.0, COLOR_BLACK);
+    this->segment3 = Rectangle(x - 2.9, y + 0.3, this->position.z, 0.2, 0.02, 0.0, 0.0, -90.0, COLOR_BLACK);
+    this->segment4 = Rectangle(x - 3.0, y + 0.2, this->position.z, 0.2, 0.02, 0.0, 0.0, 0.0, COLOR_BLACK);
+    this->segment5 = Rectangle(x - 3.1, y + 0.1, this->position.z, 0.2, 0.02, 0.0, 0.0, -90.0, COLOR_BLACK);
+    this->segment6 = Rectangle(x - 2.9, y + 0.1, this->position.z, 0.2, 0.02, 0.0, 0.0, -90.0, COLOR_BLACK);
+    this->segment7 = Rectangle(x - 3.0, y, this->position.z, 0.2, 0.02, 0.0, 0.0, 0.0, COLOR_BLACK);
 }
 
 void Digit::draw(glm::mat4 VP)

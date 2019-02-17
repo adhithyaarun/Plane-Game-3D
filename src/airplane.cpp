@@ -358,9 +358,45 @@ void Jet::stabilize_z()
     }
 }
 
+void Jet::fire_missile()
+{
+    this->missiles.push_back(Missile(this->position.x, this->position.y, this->position.z, this->rotation_x + 30.0, this->rotation_y, this->rotation_z, this->speed, COLOR_YELLOW));
+}
+
+void Jet::drop_bomb()
+{
+    this->bombs.push_back(Bomb(this->position.x, this->position.y, this->position.z, 0.0, this->rotation_y, this->rotation_z, this->speed, COLOR_YELLOW));
+}
+
 void Jet::tick()
 {
     this->position.x += this->speed * sin(this->rotation_y * M_PI / 180.0);
     this->position.z += this->speed * cos(this->rotation_y * M_PI / 180.0);
+    for(int i=0; i < this->missiles.size(); ++i)
+    {
+        if(this->missiles[i].position.y < -350.0)
+        {
+            this->missiles.erase(this->missiles.begin() + i);
+            --i;
+        }
+        else
+        {
+            this->missiles[i].tick();
+        }
+        
+    }
+    for(int i=0; i < this->bombs.size(); ++i)
+    {
+        if(this->bombs[i].position.y < -348.0)
+        {
+            this->bombs.erase(this->bombs.begin() + i);
+            --i;
+        }
+        else
+        {
+            this->bombs[i].tick();
+        }
+        
+    }
     this->set_position(this->position.x, this->position.y, this->position.z);
 }

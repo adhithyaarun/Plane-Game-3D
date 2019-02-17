@@ -95,6 +95,11 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
             {
                 glfwGetCursorPos(window, &x_initial, &y_initial);
             }
+            else
+            {
+                fire_missile();
+            }
+            
             // Do something
             return;
         } 
@@ -117,7 +122,7 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
     case GLFW_MOUSE_BUTTON_RIGHT:
         if(action == GLFW_PRESS) 
         {
-            // Do something
+            drop_bomb();
         }
         else if(action == GLFW_RELEASE) 
         {
