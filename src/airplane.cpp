@@ -360,7 +360,7 @@ void Jet::stabilize_z()
 
 void Jet::fire_missile()
 {
-    this->missiles.push_back(Missile(this->position.x, this->position.y, this->position.z, this->rotation_x + 30.0, this->rotation_y, this->rotation_z, this->speed, COLOR_YELLOW));
+    this->missiles.push_back(Missile(this->position.x, this->position.y, this->position.z, this->rotation_x + 15.0, this->rotation_y, this->rotation_z, this->speed, COLOR_YELLOW));
 }
 
 void Jet::drop_bomb()

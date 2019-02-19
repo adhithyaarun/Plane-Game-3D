@@ -107,3 +107,106 @@ void Volcano::tick()
 {
     ;
 }
+
+// Island
+Island::Island(float x, float y, float z, float size, float angle_x, float angle_y, float angle_z, color_t color)
+{
+    this->position = glm::vec3(x, y, z);
+    this->rotation_x = angle_x;
+    this->rotation_y = angle_y;
+    this->rotation_z = angle_z;
+
+    GLfloat vertex_buffer_data[750];
+    
+    srand(time(NULL));
+    
+    int side = 8 + (float)(rand() % 13);
+
+    float angle = ((360.0 / ((float)side)) * M_PI) / 180.0;
+    float aggr_angle = angle;
+
+    int iteration_size = 9;
+
+    int index = 0;
+
+    for (int i = 0; i < side; ++i)
+    {
+        // Base
+        vertex_buffer_data[i * iteration_size + 0] = size * cos(aggr_angle - angle);
+        vertex_buffer_data[i * iteration_size + 1] = size * sin(aggr_angle - angle);
+        vertex_buffer_data[i * iteration_size + 2] = 0.0;
+
+        vertex_buffer_data[i * iteration_size + 3] = 0.0;
+        vertex_buffer_data[i * iteration_size + 4] = 0.0;
+        vertex_buffer_data[i * iteration_size + 5] = 0.0;
+
+        vertex_buffer_data[i * iteration_size + 6] = size * cos(aggr_angle);
+        vertex_buffer_data[i * iteration_size + 7] = size * sin(aggr_angle);
+        vertex_buffer_data[i * iteration_size + 8] = 0.0;
+
+        aggr_angle += angle;
+        index = i * iteration_size + 9;
+    }
+
+    int rand_vertex_1 = 0.0;
+    int rand_vertex_2 = 0.0;
+
+    for(int i=0; i<5; ++i)
+    {
+        rand_vertex_1 = (rand() + (int)size) % side;
+        rand_vertex_2 = (rand() + (int)size) % side;
+
+        while(rand_vertex_1 == rand_vertex_2)
+        {
+            rand_vertex_2 = (rand() + (int)size) % side;
+        }
+
+        vertex_buffer_data[index++] = vertex_buffer_data[rand_vertex_1 * iteration_size + 0];
+        vertex_buffer_data[index++] = vertex_buffer_data[rand_vertex_1 * iteration_size + 1];
+        vertex_buffer_data[index++] = vertex_buffer_data[rand_vertex_1 * iteration_size + 2];
+
+        vertex_buffer_data[index++] = ((vertex_buffer_data[rand_vertex_1 * iteration_size + 0] + vertex_buffer_data[rand_vertex_2 * iteration_size + 0]) / 2.0) + ((size * 2.5) * (rand() % 2 == 0 ? 1 : -1));
+        vertex_buffer_data[index++] = ((vertex_buffer_data[rand_vertex_1 * iteration_size + 1] + vertex_buffer_data[rand_vertex_2 * iteration_size + 1]) / 2.0) + ((size * 2.5) * (rand() % 2 == 0 ? 1 : -1));
+        vertex_buffer_data[index++] = 0.0;
+
+        vertex_buffer_data[index++] = vertex_buffer_data[rand_vertex_2 * iteration_size + 0];
+        vertex_buffer_data[index++] = vertex_buffer_data[rand_vertex_2 * iteration_size + 1];
+        vertex_buffer_data[index++] = vertex_buffer_data[rand_vertex_2 * iteration_size + 2];
+    }
+
+    std::cout << std::endl;
+
+
+    this->object = create3DObject(GL_TRIANGLES, 3 * (side + 5), vertex_buffer_data, color, GL_FILL);
+}
+
+void Island::draw(glm::mat4 VP)
+{
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translate = glm::translate(this->position);
+    glm::mat4 rotate_x = glm::rotate((float)(this->rotation_x * M_PI / 180.0f), glm::vec3(1, 0, 0));
+    glm::mat4 rotate_y = glm::rotate((float)(this->rotation_y * M_PI / 180.0f), glm::vec3(0, 1, 0));
+    glm::mat4 rotate_z = glm::rotate((float)(this->rotation_z * M_PI / 180.0f), glm::vec3(0, 0, 1));
+    // rotate          = rotate * glm::translate(glm::vec3(0, -0.6, 0));
+    Matrices.model *= (translate * rotate_y * rotate_x * rotate_z);
+    glm::mat4 MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(this->object);
+}
+
+void Island::set_position(float x, float y, float z)
+{
+    this->position = glm::vec3(x, y, z);
+}
+
+void Island::set_angle(float angle_x, float angle_y, float angle_z)
+{
+    this->rotation_x = angle_x;
+    this->rotation_y = angle_y;
+    this->rotation_z = angle_z;
+}
+
+void Island::tick()
+{
+    ;
+}

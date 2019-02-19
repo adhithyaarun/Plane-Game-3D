@@ -11,32 +11,60 @@ Fuel::Fuel(float x, float y, float z, float size, float angle_x, float angle_y, 
     this->counter = 0;
 
     static const GLfloat vertex_buffer_data[] = {
-        0.50 * size, 0.62 * size, 0.00,
-        0.00 * size, 0.62 * size, 0.00,
-        0.00 * size, 0.00 * size, 0.00,
+        // 0.50 * size, 0.62 * size, 0.00,
+        // 0.00 * size, 0.62 * size, 0.00,
+        // 0.00 * size, 0.00 * size, 0.00,
 
-        0.50 * size, 0.62 * size, 0.00,       
-        0.00 * size, 0.00 * size, 0.00,
-        0.60 * size, 0.49 * size, 0.00,
+        // 0.50 * size, 0.62 * size, 0.00,       
+        // 0.00 * size, 0.00 * size, 0.00,
+        // 0.60 * size, 0.49 * size, 0.00,
 
-        0.60 * size, 0.49 * size, 0.00,
-        0.00 * size, 0.00 * size, 0.00, 
-        0.60 * size, 0.00 * size, 0.00,
+        // 0.60 * size, 0.49 * size, 0.00,
+        // 0.00 * size, 0.00 * size, 0.00, 
+        // 0.60 * size, 0.00 * size, 0.00,
 
-        0.00 * size, 0.70 * size, 0.00,
-        0.00 * size, 0.62 * size, 0.00,
-        0.14 * size, 0.62 * size, 0.00,
+        // 0.00 * size, 0.70 * size, 0.00,
+        // 0.00 * size, 0.62 * size, 0.00,
+        // 0.14 * size, 0.62 * size, 0.00,
 
-        0.14 * size, 0.70 * size, 0.00,
-        0.00 * size, 0.70 * size, 0.00,
-        0.14 * size, 0.62 * size, 0.00
+        // 0.14 * size, 0.70 * size, 0.00,
+        // 0.00 * size, 0.70 * size, 0.00,
+        // 0.14 * size, 0.62 * size, 0.00
+
+        (1.2 + 0.4) * 2.5, 0.0 * 2.5    ,-0.3 * 2.5,
+         0.0 * 2.5       , 0.0 * 2.5    ,-0.3 * 2.5,
+         0.0 * 2.5       , 1.0 * 2.5    ,-0.3 * 2.5,
+
+         (1.2 + 0.4) * 2.5, 1.0 * 2.5   ,-0.3 * 2.5,
+         0.0 * 2.5        , 1.0 * 2.5   ,-0.3 * 2.5,
+         (1.2 + 0.4) * 2.5, 0.0 * 2.5   ,-0.3 * 2.5,
+
+         0.0 * 2.5        , 1.4 * 2.5,-0.3 * 2.5,
+         0.0 * 2.5        , 1.0 * 2.5,-0.3 * 2.5,
+         (0.8 + 0.4) * 2.5, 1.0 * 2.5,-0.3 * 2.5,
+
+         (0.8 + 0.4) * 2.5, 1.4 * 2.5   ,-0.3 * 2.5,
+         0.0 * 2.5        , 1.4 * 2.5   ,-0.3 * 2.5,
+         (0.8 + 0.4) * 2.5, 1.0 * 2.5   ,-0.3 * 2.5,
+
+         (0.8 + 0.4) * 2.5, 1.4 * 2.5   ,-0.3 * 2.5,
+         (0.8 + 0.4) * 2.5, 1.0 * 2.5   ,-0.3 * 2.5,
+         (1.2 + 0.4) * 2.5, 1.0 * 2.5   ,-0.3 * 2.5,
+
+         0.0 * 2.5        , 1.6 * 2.5   ,-0.3 * 2.5,
+         0.0 * 2.5        , 1.4 * 2.5   ,-0.3 * 2.5,
+         (0.2 + 0.2) * 2.5, 1.4 * 2.5   ,-0.3 * 2.5,
+
+         (0.2 + 0.2) * 2.5, 1.6 * 2.5   ,-0.3 * 2.5,
+         0.0 * 2.5        , 1.6 * 2.5   ,-0.3 * 2.5,
+         (0.2 + 0.2) * 2.5, 1.4 * 2.5   ,-0.3 * 2.5,
     };
-    this->unit_1 = Rectangle(this->position.x + 0.3, this->position.y + 0.11, this->position.z, 0.40 * size, 0.07 * size, 0.00, COLOR_GREEN);
-    this->unit_2 = Rectangle(this->position.x + 0.3, this->position.y + 0.24, this->position.z, 0.40 * size, 0.07 * size, 0.00, COLOR_GREEN);
-    this->unit_3 = Rectangle(this->position.x + 0.3, this->position.y + 0.37, this->position.z, 0.40 * size, 0.07 * size, 0.00, COLOR_GREEN);
-    this->unit_4 = Rectangle(this->position.x + 0.3, this->position.y + 0.49, this->position.z, 0.40 * size, 0.07 * size, 0.00, COLOR_GREEN);
+    this->unit_1 = Rectangle(this->position.x + 1.9, this->position.y + 0.6, this->position.z, 2.9 * size, 0.35 * size, 0.00, COLOR_GREEN);
+    this->unit_2 = Rectangle(this->position.x + 1.9, this->position.y + 1.3, this->position.z, 2.9 * size, 0.35 * size, 0.00, COLOR_GREEN);
+    this->unit_3 = Rectangle(this->position.x + 1.9, this->position.y + 2.0, this->position.z, 2.9 * size, 0.35 * size, 0.00, COLOR_GREEN);
+    this->unit_4 = Rectangle(this->position.x + 1.9, this->position.y + 2.7, this->position.z, 2.9 * size, 0.35 * size, 0.00, COLOR_GREEN);
 
-    this->object = create3DObject(GL_TRIANGLES, 5 * 3, vertex_buffer_data, color, GL_FILL);
+    this->object = create3DObject(GL_TRIANGLES, 7 * 3, vertex_buffer_data, color, GL_FILL);
 }
 
 void Fuel::draw(glm::mat4 VP)
@@ -83,7 +111,7 @@ void Fuel::refill()
 void Fuel::tick()
 {
     ++this->counter;
-    if(counter == 300)
+    if(counter == 600)
     {
         --this->units;
         this->counter = 0;
@@ -95,9 +123,9 @@ Dashboard::Dashboard(float x, float y, float z)
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
     this->altitude = 35000.0;
-    this->speed = 800.0;
-    this->fuel = Fuel(this->position.x - 0.8, this->position.y, this->position.z + 0.0, 1.0, 0.0, 0.0, 0.0, COLOR_BLACK);
-    this->altimeter = Display(this->position.x, this->position.y + 0.5, this->position.z, this->altitude);
+    this->speed = 0.0;
+    this->fuel = Fuel(this->position.x - 3.8, this->position.y, this->position.z + 0.0, 1.0, 0.0, 0.0, 0.0, COLOR_BLACK);
+    this->altimeter = Display(this->position.x, this->position.y + 3.0, this->position.z, this->altitude);
     this->speedometer = Display(this->position.x, this->position.y, this->position.z, this->speed);
 }
 
@@ -114,9 +142,10 @@ void Dashboard::set_position(float x, float y, float z)
     this->fuel.set_position(x, y, z);
 }
 
-void Dashboard::tick()
+void Dashboard::tick(float altitude, float speed)
 {
-    this->set_position(this->position.x, this->position.y, this->position.z);
+    this->altitude = altitude;
+    this->speed = speed;
     this->fuel.tick();
     this->altimeter.tick(this->altitude);
     this->speedometer.tick(this->speed);

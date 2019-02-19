@@ -7,10 +7,12 @@
 #include "arrow.h"
 #include "fuelup.h"
 #include "volcano.h"
+#include "parachute.h"
 
 using namespace std;
 
 GLMatrices Matrices;
+GLMatrices Dashboard_Matrices;
 GLuint     programID;
 GLFWwindow *window;
 
@@ -29,7 +31,10 @@ coord_t plane_pos;
 
 FuelUp fuelups[5];
 Checkpoint checkpoints[8];
+vector<Checkpoint> smoke;
 Volcano volcanoes[6];
+Island islands[14];
+vector<Parachute> parachutes;
 
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
@@ -115,15 +120,21 @@ void draw() {
     glm::vec3 target(view_options[current_view].target.x, view_options[current_view].target.y, view_options[current_view].target.z);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up(view_options[current_view].up.x, view_options[current_view].up.y, view_options[current_view].up.z);
+    
+    glm::vec3 dashboard_eye(0.0, 0.0, 0.1);
+    glm::vec3 dashboard_target(0.0, 0.0, 0.0);
+    glm::vec3 dashboard_up(0.0, 1.0, 0.0);
 
     // Compute Camera matrix (view)
     Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
+    Dashboard_Matrices.view = glm::lookAt( dashboard_eye, dashboard_target, dashboard_up );
     // Don't change unless you are sure!!
     // Matrices.view = glm::lookAt(glm::vec3(0, 0, 3), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)); // Fixed camera for 2D (ortho) in XY jet
 
     // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
     // Don't change unless you are sure!!
     glm::mat4 VP = Matrices.projection * Matrices.view;
+    glm::mat4 Dashboard_VP = Dashboard_Matrices.projection * Dashboard_Matrices.view;
 
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     // For each model you render, since the MVP will be different (at least the M part)
@@ -131,7 +142,12 @@ void draw() {
     glm::mat4 MVP;  // MVP = Projection * View * Model
 
     // Scene render
-    dashboard.draw(VP);
+    for(int i=0; i<smoke.size(); ++i)
+    {
+        smoke[i].draw(VP);
+    }
+
+    dashboard.draw(Dashboard_VP);
     sea.draw(VP);
     arrow.draw(VP);
 
@@ -163,6 +179,18 @@ void draw() {
         volcanoes[i].draw(VP);
     }
 
+    for(int i=0; i<parachutes.size(); ++i)
+    {
+        if(!parachutes[i].shot_down)
+        {
+            parachutes[i].draw(VP);
+        }
+    }
+
+    for(int i=0; i<14; ++i)
+    {
+        islands[i].draw(VP);
+    }
     jet.draw(VP);
 }
 
@@ -250,8 +278,10 @@ void tick_input(GLFWwindow *window) {
 void tick_elements() 
 {
     jet.tick();
+    dashboard.tick((jet.position.y + 350.0) * 100.0, jet.speed * 450.0);
     arrow.set_angle(90.0, jet.rotation_y, jet.rotation_z);
     // Collision detection
+    // Checkpoint collection
     double distance = 0.0;
     for(int i=0; i<8; ++i)
     {
@@ -269,6 +299,7 @@ void tick_elements()
         }
     }
 
+    // Fuel-up collection
     for(int i=0; i<5; ++i)
     {
         distance = sqrt(pow(jet.position.x - fuelups[i].position.x, 2) + pow(jet.position.y - fuelups[i].position.y, 2) + pow(jet.position.z - fuelups[i].position.z, 2));
@@ -279,6 +310,7 @@ void tick_elements()
         }
     }
 
+    // Volcano No Fly Zone
     for(int i=0; i<6; ++i)
     {
         if((abs(jet.position.x - volcanoes[i].position.x) < (volcanoes[i].r_large + 1.5)) && 
@@ -286,6 +318,100 @@ void tick_elements()
         {
             quit(window);
         }
+    }
+
+    // Shooting down parachutes
+    for(int i=0; i<parachutes.size(); ++i)
+    {
+        if(!parachutes[i].shot_down)
+        {
+            for(int j=0; j<jet.missiles.size(); ++j)
+            {
+                distance = sqrt(sqrt(pow(jet.missiles[j].position.x - parachutes[i].position.x, 2) + pow(jet.missiles[j].position.y - parachutes[i].position.y, 2) + pow(jet.missiles[j].position.z - parachutes[i].position.z, 2)));
+                if((abs(jet.missiles[j].position.y - parachutes[i].position.y) < parachutes[i].r_outer) && abs(distance) < 2.0)
+                {
+                    parachutes[i].shot_down = true;
+                    jet.missiles.erase(jet.missiles.begin() + j);
+                    --j;
+                }
+            }
+            
+            for(int j=0; j<jet.bombs.size(); ++j)
+            {
+                distance = sqrt(sqrt(pow(jet.bombs[j].position.x - parachutes[i].position.x, 2) + pow(jet.bombs[j].position.y - parachutes[i].position.y, 2) + pow(jet.bombs[j].position.z - parachutes[i].position.z, 2)));
+                if((abs(jet.bombs[j].position.y - parachutes[i].position.y) < parachutes[i].r_outer) && abs(distance) < 2.0)
+                {
+                    parachutes[i].shot_down = true;
+                    jet.bombs.erase(jet.bombs.begin() + j);
+                    --j;
+                }
+            }
+        }
+
+        if(!parachutes[i].shot_down)
+        {
+            parachutes[i].tick();
+            if(parachutes[i].position.y <= -345.0)
+            {
+                parachutes.erase(parachutes.begin() + i);
+                --i;
+            }
+        }
+        else
+        {
+                parachutes.erase(parachutes.begin() + i);
+                --i;
+        }
+        
+    }
+
+    // Pass through smoke
+    for(int i=0; i<smoke.size(); ++i)
+    {
+        distance = sqrt(pow(jet.position.x - smoke[i].position.x, 2) + pow(jet.position.y - smoke[i].position.y, 2) + pow(jet.position.z - smoke[i].position.z, 2));
+        if(abs(distance) < 4.0)
+        {
+            smoke.erase(smoke.begin() + i);
+            --i;
+        }
+        else
+        {
+            smoke[i].tick();
+            if (smoke[i].position.y < -10.0)
+            {
+                smoke.erase(smoke.begin() + i);
+                --i;
+            }
+        }
+    }
+
+    float x_rand = 0.0;
+    float y_rand = 0.0;
+    float z_rand = 0.0;
+
+    float x_angle_rand = 0.0;
+    float y_angle_rand = 0.0;
+    float z_angle_rand = 0.0;
+
+    // Create new parachutes
+    while(parachutes.size() < 15)
+    {
+        x_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + parachutes[parachutes.size() - 1].position.x;
+        y_rand = 350.0 + fmod(rand() % 30, 30) * (rand() % 2 == 0 ? 1 : -1);
+        z_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + parachutes[parachutes.size() - 1].position.z;
+
+        parachutes.push_back(Parachute(x_rand, y_rand, z_rand, 1.5, 0.01, 0.0, 0.0, 0.0, COLOR_GREEN));
+    }
+
+    // Create new smoke
+    while(smoke.size() < 5)
+    {
+        x_rand = jet.position.x + (rand() % 200) * (rand() % 2 == 0 ? 1 : -1);
+        z_rand = jet.position.z + (rand() % 200) * (rand() % 2 == 0 ? 1 : -1);
+        x_angle_rand = rand() % 360;
+        y_angle_rand = rand() % 360;
+        z_angle_rand = rand() % 360;
+        smoke.push_back(Checkpoint(x_rand, 25.0, z_rand, 8.0, 1.0, x_angle_rand, y_angle_rand, z_angle_rand, COLOR_WHITE));
     }
 }
 
@@ -296,7 +422,7 @@ void initGL(GLFWwindow *window, int width, int height) {
     // Create the models
 
     jet = Jet(0.0, 0.0, 0.0, COLOR_RED);
-    dashboard = Dashboard(2.0, 14.0, -18.0);
+    dashboard = Dashboard(-15.0, -15.0, 0.0);
     sea = Circle(0.0, -350.0, 0.0, 7000.0, 90.0, 0.0, 0.0, COLOR_BLUE);
 
     int x_rand = 0.0;
@@ -317,7 +443,7 @@ void initGL(GLFWwindow *window, int width, int height) {
             z_rand = ((rand() % 550) + volcanoes[i-1].position.z + 205.0) * (rand() % 2 == 0 ? 1 : -1);
         }
         
-        volcanoes[i] = Volcano(x_rand, -350.0, z_rand, 28.0, 12.0, 32.0, 90.0, 0.0, 0.0, COLOR_BROWN);
+        volcanoes[i] = Volcano(x_rand, -349.8, z_rand, 28.0, 12.0, 32.0, 90.0, 0.0, 0.0, COLOR_BROWN);
     }
 
     for(int i=0; i<8 ; ++i)
@@ -365,6 +491,49 @@ void initGL(GLFWwindow *window, int width, int height) {
                   jet.rotation_y,
                   jet.rotation_z,
                   COLOR_RED);
+
+    for(int i=0; i<15; ++i)
+    {
+        if(i == 0)
+        {
+            x_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + jet.position.x;
+            y_rand = 150.0 + (fmod(rand() % 30, 30)) * (rand() % 2 == 0 ? 1 : -1);
+            z_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + jet.position.z;
+        }
+        else        
+        {
+            x_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + parachutes[i-1].position.x;
+            y_rand = 350.0 + fmod(rand() % 30, 30) * (rand() % 2 == 0 ? 1 : -1);
+            z_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + parachutes[i-1].position.z;
+        }
+        parachutes.push_back(Parachute(x_rand, y_rand, z_rand, 1.5, 0.01, 0.0, 0.0, 0.0, COLOR_GREEN));
+    }
+
+    for(int i=0; i<14; ++i)
+    {
+        if(i < 8)
+        {
+            islands[i] = Island(checkpoints[i].position.x, -349.8, checkpoints[i].position.z, 10.0 + (float)(rand() % 15), 90.0, 0.0, 0.0, COLOR_BROWN);
+        }
+        else
+        {
+            islands[i] = Island(volcanoes[i-8].position.x, -349.8, volcanoes[i-8].position.z, volcanoes[i-8].r_large + (float)(rand() % 15), 90.0, 0.0, 0.0, COLOR_BROWN);
+        }
+    }
+
+    float x_angle_rand = 0.0;
+    float y_angle_rand = 0.0;
+    float z_angle_rand = 0.0;
+
+    for(int i=0; i<5; ++i)
+    {
+        x_rand = jet.position.x + (rand() % 200) * (rand() % 2 == 0 ? 1 : -1);
+        z_rand = jet.position.z + (rand() % 200) * (rand() % 2 == 0 ? 1 : -1);
+        x_angle_rand = rand() % 360;
+        y_angle_rand = rand() % 360;
+        z_angle_rand = rand() % 360;
+        smoke.push_back(Checkpoint(x_rand, 25.0, z_rand, 8.0, 1.0, x_angle_rand, y_angle_rand, z_angle_rand, COLOR_WHITE));
+    }
 
     view_options[0].eye.x = 0.0;
     view_options[0].eye.y = 16.0;
@@ -447,9 +616,10 @@ void drop_bomb()
 }
 
 void reset_screen() {
-    // float bottom = screen_center_y - 20 / screen_zoom;
-    // float left   = screen_center_x - 20 / screen_zoom;
-    // float right  = screen_center_x + 20 / screen_zoom;
-    // float top    = screen_center_y + 20 / screen_zoom;
+    float bottom = screen_center_y - 20 / screen_zoom;
+    float left   = screen_center_x - 20 / screen_zoom;
+    float right  = screen_center_x + 20 / screen_zoom;
+    float top    = screen_center_y + 20 / screen_zoom;
     Matrices.projection = glm::perspective(glm::radians(90.0), 1.0, 0.1, 5000.0);
+    Dashboard_Matrices.projection = glm::ortho(left, right, bottom, top);
 }

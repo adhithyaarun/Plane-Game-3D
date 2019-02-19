@@ -262,5 +262,5 @@ void Checkpoint::set_position(float x, float y, float z)
 
 void Checkpoint::tick()
 {
-    ;
+    this->position.y -= 0.05;
 }
