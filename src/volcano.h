@@ -23,6 +23,7 @@ class Volcano
 
   private:
     VAO *object;
+    VAO *top;
 };
 
 class Island

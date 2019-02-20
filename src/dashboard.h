@@ -1,6 +1,7 @@
 #include "main.h"
 #include "shape.h"
 #include "display.h"
+#include "compass.h"
 
 class Fuel
 {
@@ -34,10 +35,13 @@ class Dashboard
         float rotation;
         void draw(glm::mat4 VP);
         void set_position(float x, float y, float z);
-        void tick(float altitude, float speed);
+        void tick(float altitude, float speed, float angle);
         float altitude;
         float speed;
+        float score_val;
         Fuel fuel;
         Display altimeter;
         Display speedometer;
+        Display score;
+        Compass compass;
 };

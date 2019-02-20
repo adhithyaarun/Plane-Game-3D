@@ -121,7 +121,7 @@ void Missile::tick()
     this->position.x += this->speed * sin(this->rotation_y * M_PI / 180.0);
     this->position.y -= 0.3;
     this->position.z += this->speed * cos(this->rotation_y * M_PI / 180.0);;
-    this->set_position(this->position.x, this->position.y, this->position.z);
+    this->set_position(this->position.x, this->position.y, this->position.z);   
 }
 
 // Bomb
@@ -144,6 +144,10 @@ Bomb::Bomb(float x, float y, float z, float angle_x, float angle_y, float angle_
     float temp_y = 0.0;
 
     int iteration_size = 63;
+
+    this->vec.x = 0.0;
+    this->vec.y = -1000.0;
+    this->vec.z = 0.0;
 
     for (int i = 0; i < 20; ++i)
     {
@@ -266,14 +270,31 @@ void Bomb::set_position(float x, float y, float z)
     this->position = glm::vec3(x, y, z);
 }
 
+void Bomb::cannon_fire(coord_t unit)
+{
+    this->vec = unit;
+}
+
 void Bomb::tick()
 {
-    this->position.x += this->speed * sin(this->rotation_y * M_PI / 180.0);
-    if(this->gravity < 0.6)
+    if(this->vec.y < -350.0)
     {
-        this->gravity += 0.02;
+        this->position.x += this->speed * sin(this->rotation_y * M_PI / 180.0);
+        if(this->gravity < 0.6)
+        {
+            this->gravity += 0.02;
+        }
+        this->position.y -= this->gravity;
+        this->position.z += this->speed * cos(this->rotation_y * M_PI / 180.0);;
+        this->set_position(this->position.x, this->position.y, this->position.z);
     }
-    this->position.y -= this->gravity;
-    this->position.z += this->speed * cos(this->rotation_y * M_PI / 180.0);;
-    this->set_position(this->position.x, this->position.y, this->position.z);
+    else
+    {
+        this->position.x += (1 * vec.x);
+        this->position.y += (1 * vec.y);
+        this->position.z += (1 * vec.z);
+        this->rotation_x = fmod(this->rotation_x + 5.0, 360.0); 
+        this->rotation_y = fmod(this->rotation_y + 5.0, 360.0); 
+        this->rotation_z = fmod(this->rotation_z + 5.0, 360.0); 
+    }
 }

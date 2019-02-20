@@ -30,6 +30,8 @@ class Bomb
     float rotation_x;
     float rotation_y;
     float rotation_z;
+    coord_t vec;
+    void cannon_fire(coord_t unit);
     void draw(glm::mat4 VP);
     void set_position(float x, float y, float z);
     void tick();

@@ -11,26 +11,6 @@ Fuel::Fuel(float x, float y, float z, float size, float angle_x, float angle_y, 
     this->counter = 0;
 
     static const GLfloat vertex_buffer_data[] = {
-        // 0.50 * size, 0.62 * size, 0.00,
-        // 0.00 * size, 0.62 * size, 0.00,
-        // 0.00 * size, 0.00 * size, 0.00,
-
-        // 0.50 * size, 0.62 * size, 0.00,       
-        // 0.00 * size, 0.00 * size, 0.00,
-        // 0.60 * size, 0.49 * size, 0.00,
-
-        // 0.60 * size, 0.49 * size, 0.00,
-        // 0.00 * size, 0.00 * size, 0.00, 
-        // 0.60 * size, 0.00 * size, 0.00,
-
-        // 0.00 * size, 0.70 * size, 0.00,
-        // 0.00 * size, 0.62 * size, 0.00,
-        // 0.14 * size, 0.62 * size, 0.00,
-
-        // 0.14 * size, 0.70 * size, 0.00,
-        // 0.00 * size, 0.70 * size, 0.00,
-        // 0.14 * size, 0.62 * size, 0.00
-
         (1.2 + 0.4) * 2.5, 0.0 * 2.5    ,-0.3 * 2.5,
          0.0 * 2.5       , 0.0 * 2.5    ,-0.3 * 2.5,
          0.0 * 2.5       , 1.0 * 2.5    ,-0.3 * 2.5,
@@ -106,15 +86,20 @@ void Fuel::set_position(float x, float y, float z)
 void Fuel::refill()
 {
     this->units = 4;
+    this->unit_1 = Rectangle(this->position.x + 1.9, this->position.y + 0.6, this->position.z, 2.9, 0.35, 0.00, COLOR_GREEN);
 }
 
 void Fuel::tick()
 {
     ++this->counter;
-    if(counter == 600)
+    if(counter == 780)
     {
         --this->units;
         this->counter = 0;
+        if(units == 1)
+        {
+            this->unit_1 = Rectangle(this->position.x + 1.9, this->position.y + 0.6, this->position.z, 2.9, 0.35, 0.00, COLOR_RED);
+        }
     }
 }
 
@@ -124,9 +109,13 @@ Dashboard::Dashboard(float x, float y, float z)
     this->rotation = 0;
     this->altitude = 35000.0;
     this->speed = 0.0;
+    this->score_val = 0.0;
+
     this->fuel = Fuel(this->position.x - 3.8, this->position.y, this->position.z + 0.0, 1.0, 0.0, 0.0, 0.0, COLOR_BLACK);
     this->altimeter = Display(this->position.x, this->position.y + 3.0, this->position.z, this->altitude);
     this->speedometer = Display(this->position.x, this->position.y, this->position.z, this->speed);
+    this->score = Display(this->position.x - 5.8, this->position.y + 33.0, this->position.z, 0.0);
+    this->compass = Compass(this->position.x + 28.0, this->position.y + 2.0, this->position.z, 0.0, 0.0, 0.0, COLOR_SPECIAL_GREEN);
 }
 
 void Dashboard::draw(glm::mat4 VP)
@@ -134,6 +123,8 @@ void Dashboard::draw(glm::mat4 VP)
     this->fuel.draw(VP);
     this->altimeter.draw(VP);
     this->speedometer.draw(VP);
+    this->score.draw(VP);
+    this->compass.draw(VP);
 }
 
 void Dashboard::set_position(float x, float y, float z)
@@ -142,11 +133,14 @@ void Dashboard::set_position(float x, float y, float z)
     this->fuel.set_position(x, y, z);
 }
 
-void Dashboard::tick(float altitude, float speed)
+void Dashboard::tick(float altitude, float speed, float angle)
 {
     this->altitude = altitude;
     this->speed = speed;
+
     this->fuel.tick();
     this->altimeter.tick(this->altitude);
     this->speedometer.tick(this->speed);
+    this->score.tick(this->score_val);
+    this->compass.tick(-angle);
 }

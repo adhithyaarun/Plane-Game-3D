@@ -8,6 +8,7 @@
 #include "fuelup.h"
 #include "volcano.h"
 #include "parachute.h"
+#include "cannon.h"
 
 using namespace std;
 
@@ -29,12 +30,13 @@ int arrow_pos = 0;
 view_t view_options[5];
 coord_t plane_pos;
 
-FuelUp fuelups[5];
+FuelUp fuelups[10];
 Checkpoint checkpoints[8];
 vector<Checkpoint> smoke;
 Volcano volcanoes[6];
-Island islands[14];
+Island islands[24];
 vector<Parachute> parachutes;
+vector<Cannon> cannons;
 
 float screen_zoom = 1, screen_center_x = 0, screen_center_y = 0;
 float camera_rotation_angle = 0;
@@ -166,7 +168,7 @@ void draw() {
         jet.bombs[i].draw(VP);
     }
 
-    for(int i=0; i<5; ++i)
+    for(int i=0; i<10; ++i)
     {
         if(!fuelups[i].collected)
         {
@@ -187,10 +189,16 @@ void draw() {
         }
     }
 
-    for(int i=0; i<14; ++i)
+    for(int i=0; i<24; ++i)
     {
         islands[i].draw(VP);
     }
+
+    for(int i=0; i<cannons.size(); ++i)
+    {
+        cannons[i].draw(VP);
+    }
+
     jet.draw(VP);
 }
 
@@ -243,17 +251,11 @@ void tick_input(GLFWwindow *window) {
     }
     if(roll_left)
     {
-        if(jet.rotation_z >= -89.0)
-        {
-            jet.rotation_z -= 1.0;
-        }
+        jet.rotation_z = fmod(jet.rotation_z - 1.0, 360.0);
     }
     if(roll_right)
     {
-        if(jet.rotation_z <= 89.0)
-        {
-            jet.rotation_z += 1.0;
-        }
+        jet.rotation_z = fmod(jet.rotation_z + 1.0, 360.0);
     }
 
     if(accelerate)
@@ -278,8 +280,15 @@ void tick_input(GLFWwindow *window) {
 void tick_elements() 
 {
     jet.tick();
-    dashboard.tick((jet.position.y + 350.0) * 100.0, jet.speed * 450.0);
+    dashboard.tick((jet.position.y + 350.0) * 100.0, jet.speed * 450.0, jet.rotation_y);
+    
+    if(dashboard.fuel.units < 0 || dashboard.altitude <= 0)
+    {
+        cout << "You ran out of fuel" << endl;
+        quit(window);
+    }
     arrow.set_angle(90.0, jet.rotation_y, jet.rotation_z);
+
     // Collision detection
     // Checkpoint collection
     double distance = 0.0;
@@ -291,7 +300,13 @@ void tick_elements()
             if(abs(distance) < 4.0)
             {
                 checkpoints[i].complete(COLOR_GREEN);
+                dashboard.score_val += 1000.0;
                 arrow_pos++;
+                if(arrow_pos >= 8)
+                {
+                    cout << "You've completed the obstacle course. Great job!" << endl;
+                    quit(window);
+                }
                 arrow.set_position(checkpoints[arrow_pos].position.x,
                                 checkpoints[arrow_pos].position.y + checkpoints[arrow_pos].r_outer + 12.0,
                                 checkpoints[arrow_pos].position.z);
@@ -300,7 +315,7 @@ void tick_elements()
     }
 
     // Fuel-up collection
-    for(int i=0; i<5; ++i)
+    for(int i=0; i<10; ++i)
     {
         distance = sqrt(pow(jet.position.x - fuelups[i].position.x, 2) + pow(jet.position.y - fuelups[i].position.y, 2) + pow(jet.position.z - fuelups[i].position.z, 2));
         if(abs(distance) < 4.0)
@@ -316,6 +331,7 @@ void tick_elements()
         if((abs(jet.position.x - volcanoes[i].position.x) < (volcanoes[i].r_large + 1.5)) && 
            (abs(jet.position.z - volcanoes[i].position.z) < (volcanoes[i].r_large + 1.5)))
         {
+            cout << "You flew into a NO FLY zone."<< endl;
             quit(window);
         }
     }
@@ -332,6 +348,7 @@ void tick_elements()
                 {
                     parachutes[i].shot_down = true;
                     jet.missiles.erase(jet.missiles.begin() + j);
+                    dashboard.score_val += 500.0;
                     --j;
                 }
             }
@@ -343,6 +360,7 @@ void tick_elements()
                 {
                     parachutes[i].shot_down = true;
                     jet.bombs.erase(jet.bombs.begin() + j);
+                    dashboard.score_val += 500.0;
                     --j;
                 }
             }
@@ -372,6 +390,7 @@ void tick_elements()
         if(abs(distance) < 4.0)
         {
             smoke.erase(smoke.begin() + i);
+            dashboard.score_val += 300.0;
             --i;
         }
         else
@@ -384,6 +403,56 @@ void tick_elements()
             }
         }
     }
+
+    // Cannon shooting
+    for (int i = 0; i < cannons.size(); ++i)
+    {
+        for (int j = 0; j < jet.missiles.size(); ++j)
+        {
+            distance = sqrt(sqrt(pow(jet.missiles[j].position.x - cannons[i].position.x, 2) + pow(jet.missiles[j].position.y - cannons[i].position.y, 2) + pow(jet.missiles[j].position.z - cannons[i].position.z, 2)));
+            if (abs(distance) < 2.0)
+            {
+                jet.missiles.erase(jet.missiles.begin() + j);
+                cannons.erase(cannons.begin() + i);
+                --j;
+            }
+        }
+
+        for (int j = 0; j < jet.bombs.size(); ++j)
+        {
+            distance = sqrt(sqrt(pow(jet.bombs[j].position.x - cannons[i].position.x, 2) + pow(jet.bombs[j].position.y - cannons[i].position.y, 2) + pow(jet.bombs[j].position.z - cannons[i].position.z, 2)));
+            if (abs(distance) < 2.0)
+            {
+                jet.bombs.erase(jet.bombs.begin() + j);
+                cannons.erase(cannons.begin() + i);
+                --j;
+            }
+        }
+        
+        if(abs(jet.position.x - cannons[i].position.x) < 70.0 &&
+           abs(jet.position.z - cannons[i].position.z) < 70.0)
+        {
+            cannons[i].fire(jet.position.x, jet.position.y, jet.position.z);   
+        }
+        cannons[i].tick();
+        for(int j=0; j<cannons[i].bombs.size(); ++j)
+        {
+            distance = sqrt(pow(cannons[i].bombs[j].position.x - jet.position.x, 2) +
+                            pow(cannons[i].bombs[j].position.y - jet.position.y, 2) +
+                            pow(cannons[i].bombs[j].position.z - jet.position.z, 2));
+            if(abs(distance) <= 3.0)
+            {
+                cout << "You got shot by an enemy CANNON" <<endl;
+                quit(window);
+            }
+            else if(abs(distance) > 10.0 && cannons[i].bombs[j].position.y > (jet.position.y + 5.0))
+            {
+                cannons[i].bombs.erase(cannons[i].bombs.begin() + j);
+                --j;
+            }
+        }
+    }
+
 
     float x_rand = 0.0;
     float y_rand = 0.0;
@@ -421,7 +490,7 @@ void initGL(GLFWwindow *window, int width, int height) {
     /* Objects should be created before any other gl function and shaders */
     // Create the models
 
-    jet = Jet(0.0, 0.0, 0.0, COLOR_RED);
+    jet = Jet(0.0, -200.0, 0.0, COLOR_RED);
     dashboard = Dashboard(-15.0, -15.0, 0.0);
     sea = Circle(0.0, -350.0, 0.0, 7000.0, 90.0, 0.0, 0.0, COLOR_BLUE);
 
@@ -430,33 +499,35 @@ void initGL(GLFWwindow *window, int width, int height) {
     int z_rand = 0.0;
 
     srand(time(0));
+    // Volcano creation
     for(int i=0; i<6; ++i)
     {
         if(i == 0)
         {
-            x_rand = (rand() % 350);
-            z_rand = (rand() % 350);
+            x_rand = (rand() % 200);
+            z_rand = (rand() % 200);
         }
         else
         {
-            x_rand = ((rand() % 550) + volcanoes[i-1].position.x + 205.0) * (rand() % 2 == 0 ? 1 : -1);
-            z_rand = ((rand() % 550) + volcanoes[i-1].position.z + 205.0) * (rand() % 2 == 0 ? 1 : -1);
+            x_rand = fmod(((rand() % 180) + volcanoes[i-1].position.x + 205.0) * (rand() % 2 == 0 ? 1 : -1), 1600.0);
+            z_rand = fmod(((rand() % 180) + volcanoes[i-1].position.z + 205.0) * (rand() % 2 == 0 ? 1 : -1), 1600.0);
         }
         
-        volcanoes[i] = Volcano(x_rand, -349.8, z_rand, 28.0, 12.0, 32.0, 90.0, 0.0, 0.0, COLOR_BROWN);
+        volcanoes[i] = Volcano(x_rand, -349.8, z_rand, 36.0, 14.0, 52.0, 90.0, 0.0, 0.0, COLOR_DARK_BROWN);
     }
 
+    // Checkpoint creation
     for(int i=0; i<8 ; ++i)
     {
         if(i == 0)
         {
-            checkpoints[i] = Checkpoint(fmod(rand(), 100.0), fmod(rand(), 100.0), fmod(rand(), 100.0), 8.0, 1.0, 0.0, fmod(rand(), 360.0), 0.0, COLOR_ORANGE);
+            checkpoints[i] = Checkpoint(fmod(rand(), 100.0), jet.position.y + fmod(rand(), 100.0), fmod(rand(), 100.0), 8.0, 1.0, 0.0, fmod(rand(), 360.0), 0.0, COLOR_ORANGE);
         }
         else
         {
-            checkpoints[i] = Checkpoint(checkpoints[i-1].position.x + (rand() % 2 == 0 ? 1 : -1) * (100.0 + fmod(rand(), 200.0)), // X-coordinate
+            checkpoints[i] = Checkpoint(fmod(checkpoints[i-1].position.x + (rand() % 2 == 0 ? 1 : -1) * (100.0 + fmod(rand(), 200.0)), 1400.0), // X-coordinate
                                         fmod(checkpoints[i-1].position.y + (rand() % 2 == 0 ? 1 : -1) * (fmod(rand(), 100.0)), 348.0), // Y-coordinate
-                                        checkpoints[i-1].position.z + (rand() % 2 == 0 ? 1 : -1) * (100.0 + fmod(rand(), 200.0)), // Z-coordinate
+                                        fmod(checkpoints[i-1].position.z + (rand() % 2 == 0 ? 1 : -1) * (100.0 + fmod(rand(), 200.0)), 1400.0), // Z-coordinate
                                         8.0,                                               // Inner radius
                                         1.0,                                               // Width
                                         0.0,                                               // Angle along X 
@@ -466,24 +537,26 @@ void initGL(GLFWwindow *window, int width, int height) {
         }
     }
     
-    for(int i=0; i<5; ++i)
+    // Fuelup creation
+    for(int i=0; i<10; ++i)
     {
-        if(i == 0)
+        if(i <= 1)
         {
-            x_rand = ((rand() % 200) + jet.position.x) * (rand() % 2 == 0 ? 1 : -1);
-            y_rand = ((rand() % 200) + jet.position.y) * (rand() % 2 == 0 ? 1 : -1);
-            z_rand = fmod(((rand() % 50) + jet.position.z) * (rand() % 2 == 0 ? 1 : -1), 348.0);
+            x_rand = ((rand() % 100) + jet.position.x) * (rand() % 2 == 0 ? 1 : -1);
+            y_rand = fmod(((rand() % 50) + jet.position.y) * (rand() % 2 == 0 ? 1 : -1), 348.0);
+            z_rand = ((rand() % 100) + jet.position.z) * (rand() % 2 == 0 ? 1 : -1);
         }
         else
         {
-            x_rand = ((rand() % 200) + x_rand) * (rand() % 2 == 0 ? 1 : -1);
-            y_rand = ((rand() % 200) + y_rand) * (rand() % 2 == 0 ? 1 : -1);
-            z_rand = fmod(((rand() % 50) + z_rand) * (rand() % 2 == 0 ? 1 : -1), 348.0);
+            x_rand = ((rand() % 150) + checkpoints[i-2].position.x) * (rand() % 2 == 0 ? 1 : -1);
+            y_rand = fmod(((rand() % 50) + y_rand) * (rand() % 2 == 0 ? 1 : -1), 348.0);
+            z_rand = ((rand() % 250) + checkpoints[i-2].position.z) * (rand() % 2 == 0 ? 1 : -1);
         }
 
         fuelups[i] = FuelUp(x_rand, y_rand, z_rand, jet.rotation_x, jet.rotation_y, jet.rotation_z, COLOR_GREEN);
     }
 
+    // Arrow creation
     arrow = Arrow(checkpoints[0].position.x, 
                   checkpoints[0].position.y + checkpoints[0].r_outer + 12.0,
                   checkpoints[0].position.z,
@@ -492,33 +565,41 @@ void initGL(GLFWwindow *window, int width, int height) {
                   jet.rotation_z,
                   COLOR_RED);
 
+    // Parachute creation
     for(int i=0; i<15; ++i)
     {
         if(i == 0)
         {
             x_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + jet.position.x;
-            y_rand = 150.0 + (fmod(rand() % 30, 30)) * (rand() % 2 == 0 ? 1 : -1);
+            y_rand = -50.0 + (fmod(rand() % 30, 30)) * (rand() % 2 == 0 ? 1 : -1);
             z_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + jet.position.z;
         }
         else        
         {
             x_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + parachutes[i-1].position.x;
-            y_rand = 350.0 + fmod(rand() % 30, 30) * (rand() % 2 == 0 ? 1 : -1);
+            y_rand = 150.0 + fmod(rand() % 30, 30) * (rand() % 2 == 0 ? 1 : -1);
             z_rand = (rand() % 300) * (rand() % 2 == 0 ? 1 : -1) + parachutes[i-1].position.z;
         }
-        parachutes.push_back(Parachute(x_rand, y_rand, z_rand, 1.5, 0.01, 0.0, 0.0, 0.0, COLOR_GREEN));
+        parachutes.push_back(Parachute(x_rand, y_rand, z_rand, 1.5, 0.01, 0.0, 0.0, 0.0, COLOR_PURPLE));
     }
 
-    for(int i=0; i<14; ++i)
+    // Island creation, Cannon creation
+    for(int i=0; i<24; ++i)
     {
         if(i < 8)
         {
             islands[i] = Island(checkpoints[i].position.x, -349.8, checkpoints[i].position.z, 10.0 + (float)(rand() % 15), 90.0, 0.0, 0.0, COLOR_BROWN);
         }
-        else
+        else if(i < 14)
         {
             islands[i] = Island(volcanoes[i-8].position.x, -349.8, volcanoes[i-8].position.z, volcanoes[i-8].r_large + (float)(rand() % 15), 90.0, 0.0, 0.0, COLOR_BROWN);
         }
+        else
+        {
+            islands[i] = Island((rand() % 300), -349.8, (rand() % 300), 10.0 + (float)(rand() % 15), 90.0, 0.0, 0.0, COLOR_BROWN);
+        }
+        
+        cannons.push_back(Cannon(islands[i].position.x, -350, islands[i].position.z, 0.50, 0.50, 3.0, 45.0, 0.0, 0.0, COLOR_YELLOW));
     }
 
     float x_angle_rand = 0.0;
@@ -535,9 +616,9 @@ void initGL(GLFWwindow *window, int width, int height) {
         smoke.push_back(Checkpoint(x_rand, 25.0, z_rand, 8.0, 1.0, x_angle_rand, y_angle_rand, z_angle_rand, COLOR_WHITE));
     }
 
-    view_options[0].eye.x = 0.0;
-    view_options[0].eye.y = 16.0;
-    view_options[0].eye.z = -20.0;
+    view_options[0].eye.x = jet.position.x;
+    view_options[0].eye.y = jet.position.y + 16.0;
+    view_options[0].eye.z = jet.position.z - 20.0;
 
     view_options[0].target.x = 0.0;
     view_options[0].target.y = 0.0;

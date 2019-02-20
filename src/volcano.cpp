@@ -74,7 +74,7 @@ Volcano::Volcano(float x, float y, float z, float r_large, float r_small, float 
         aggr_angle += angle;
     }
 
-    this->object = create3DObject(GL_TRIANGLES, 12 * 20, vertex_buffer_data, color, GL_LINE);
+    this->object = create3DObject(GL_TRIANGLES, 12 * 20, vertex_buffer_data, color, GL_FILL);
 }
 
 void Volcano::draw(glm::mat4 VP)
@@ -117,8 +117,6 @@ Island::Island(float x, float y, float z, float size, float angle_x, float angle
     this->rotation_z = angle_z;
 
     GLfloat vertex_buffer_data[750];
-    
-    srand(time(NULL));
     
     int side = 8 + (float)(rand() % 13);
 
@@ -177,7 +175,7 @@ Island::Island(float x, float y, float z, float size, float angle_x, float angle
     std::cout << std::endl;
 
 
-    this->object = create3DObject(GL_TRIANGLES, 3 * (side + 5), vertex_buffer_data, color, GL_FILL);
+    this->object = create3DObject(GL_TRIANGLES, 3 * (side + 2), vertex_buffer_data, color, GL_FILL);
 }
 
 void Island::draw(glm::mat4 VP)
